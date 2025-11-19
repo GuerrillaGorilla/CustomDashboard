@@ -8,6 +8,7 @@ export default define.page(function App({ Component, state }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{state.title ?? "with-fresh"}</title>
         <link rel="stylesheet" href="/styles.css" />
+        <link rel="icon" href="/coffee.svg" type="image/svg+xml" />
       </head>
       <body>
         <Component />

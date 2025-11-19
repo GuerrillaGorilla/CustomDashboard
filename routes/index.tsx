@@ -19,6 +19,11 @@ type WarmQueryResponse = {
   primaryResults?: Array<{ name: string; data: PrimaryResultRow[] }>;
 };
 
+type ChartPoint = {
+  value: number;
+  label: string;
+};
+
 // TODO: move these credentials to configuration or environment for production use.
 const JWT =
   "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Njc4Nzc2NzYwMTgsIlVzZXJuYW1lIjoibWF0dGhldy5zbWl0aEBmYXRoeW0uY29tIiwiV29ya3NwYWNlTG9va3VwIjoiOGUwYTAwYjQtZTYwYi00YjkyLWI2NDMtYzc3NTBlZTM0ZmJiIiwiQWNjZXNzUmlnaHRzIjpbIkdvZG1pbiIsIldvcmtzcGFjZS5JbmZyYXN0cnVjdHVyZS5NYW5hZ2VkIiwiV29ya3NwYWNlLkluZnJhc3RydWN0dXJlLlByaXZhdGUiLCJXb3Jrc3BhY2UuRGVwbG95IiwiV29ya3NwYWNlLkV4cGVyaW1lbnRhbCJdfQ.nvw8BrsXX2QcE7QezzEws4ZKvtaVHOMBo2jD88ub23OqTmKzDVdnrIsIxHmsNExejTKYWJT90cl9Xsr2JL4-Cw";
@@ -192,23 +197,35 @@ export default define.page(async function Home(ctx) {
             </h2>
             <div class="grid gap-3 md:grid-cols-2">
               <ChartCard
-                title="Temperature (C)"
-                values={history.map((r) => r.FermentationTemp)}
+                title="Temperature (deg C)"
+                data={buildSeries(history, (r) => r.FermentationTemp, {
+                  unit: "deg C",
+                  fractionDigits: 2,
+                })}
                 maxPoints={24}
               />
               <ChartCard
                 title="Pressure (psi)"
-                values={history.map((r) => r.FermentationPressure)}
+                data={buildSeries(history, (r) => r.FermentationPressure, {
+                  unit: "psi",
+                  fractionDigits: 2,
+                })}
                 maxPoints={24}
               />
               <ChartCard
                 title="Specific Gravity"
-                values={history.map((r) => r.SpecificGravity)}
+                data={buildSeries(history, (r) => r.SpecificGravity, {
+                  unit: "SG",
+                  fractionDigits: 3,
+                })}
                 maxPoints={24}
               />
               <ChartCard
                 title="Flow (L/min)"
-                values={history.map((r) => r.FlowRate)}
+                data={buildSeries(history, (r) => r.FlowRate, {
+                  unit: "L/min",
+                  fractionDigits: 2,
+                })}
                 maxPoints={24}
               />
             </div>
@@ -219,7 +236,10 @@ export default define.page(async function Home(ctx) {
             </h2>
             <BarChart
               title="CO2 (ppm)"
-              values={history.slice(0, 12).map((r) => r.CO2ppm)}
+              data={buildBarSeries(history.slice(0, 12), (row) => row.CO2ppm, {
+                unit: "ppm",
+                fractionDigits: 0,
+              })}
             />
             <Gauge
               title="Flow Rate"
@@ -328,35 +348,68 @@ function MiniCard(props: { title: string; value?: string; unit: string }) {
   );
 }
 
+function buildSeries(
+  rows: PrimaryResultRow[],
+  getter: (row: PrimaryResultRow) => number,
+  opts: { unit: string; fractionDigits?: number },
+): ChartPoint[] {
+  const formatter = (value: number) =>
+    `${value.toFixed(opts.fractionDigits ?? 2)} ${opts.unit}`;
+  return rows.map((row) => {
+    const value = getter(row);
+    const time = new Date(row.EnqueuedTime).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    return {
+      value,
+      label: `${time} - ${formatter(value)}`,
+    };
+  });
+}
+
+function buildBarSeries(
+  rows: PrimaryResultRow[],
+  getter: (row: PrimaryResultRow) => number,
+  opts: { unit: string; fractionDigits?: number },
+): ChartPoint[] {
+  return buildSeries(rows, getter, opts);
+}
+
 function ChartCard(
-  props: { title: string; values: number[]; maxPoints?: number },
+  props: { title: string; data: ChartPoint[]; maxPoints?: number },
 ) {
-  const series = props.values.slice(0, props.maxPoints ?? 20).reverse();
+  const series = props.data.slice(0, props.maxPoints ?? 20).reverse();
   return (
-    <div class="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-      <p class="text-sm text-slate-300 mb-2">{props.title}</p>
-      <Sparkline values={series} />
+    <div class="rounded-lg border border-slate-800 bg-slate-900/60 p-5">
+      <p class="text-sm text-slate-300 mb-3">{props.title}</p>
+      <Sparkline points={series} />
     </div>
   );
 }
 
-function Sparkline(props: { values: number[] }) {
-  const { values } = props;
-  const width = 320;
-  const height = 120;
-  if (values.length === 0) {
+function Sparkline(props: { points: ChartPoint[] }) {
+  const { points } = props;
+  const width = 420;
+  const height = 220;
+  if (points.length === 0) {
     return <div class="text-slate-500 text-sm">No data</div>;
   }
-  const max = Math.max(...values);
-  const min = Math.min(...values);
+  const rawValues = points.map((p) => p.value);
+  const max = Math.max(...rawValues);
+  const min = Math.min(...rawValues);
   const span = max - min || 1;
   const ticks = [min, min + span * 0.5, max];
-  const points = values.map((v, i) => {
-    const x = (i / Math.max(1, values.length - 1)) * (width - 36) + 24;
-    const y = height - ((v - min) / span * (height - 30) + 18);
-    return `${x},${y}`;
-  }).join(" ");
-  const lastPoint = points.split(" ").at(-1)?.split(",") ?? ["0", "0"];
+  const coords = points.map((point, i) => {
+    const x = (i / Math.max(1, points.length - 1)) * (width - 80) + 50;
+    const y = height - ((point.value - min) / span * (height - 60) + 30);
+    return { ...point, x, y };
+  });
+  const polylinePoints = coords.map((point) => `${point.x},${point.y}`).join(
+    " ",
+  );
+  const lastPoint = coords.at(-1);
   return (
     <div class="space-y-1">
       <div class="flex justify-between text-xs text-slate-400">
@@ -365,38 +418,43 @@ function Sparkline(props: { values: number[] }) {
       </div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        class="w-full h-28 text-amber-300"
+        class="w-full h-52 text-amber-300"
       >
         <line
-          x1="24"
-          y1={height - 12}
-          x2={width - 8}
-          y2={height - 12}
+          x1="50"
+          y1={height - 20}
+          x2={width - 20}
+          y2={height - 20}
           stroke="#334155"
           strokeWidth="1"
         />
         <line
-          x1="24"
-          y1={height - 12}
-          x2="24"
-          y2="12"
+          x1="50"
+          y1={height - 20}
+          x2="50"
+          y2="20"
           stroke="#334155"
           strokeWidth="1"
         />
         {ticks.map((t, idx) => {
-          const y = height - ((t - min) / span * (height - 30) + 18);
+          const y = height - ((t - min) / span * (height - 60) + 30);
           return (
             <g key={idx}>
               <line
-                x1="20"
+                x1="46"
                 y1={y}
-                x2={width - 8}
+                x2={width - 20}
                 y2={y}
                 stroke="#1f2937"
                 strokeWidth="1"
                 strokeDasharray="2 4"
               />
-              <text x="0" y={y + 4} fill="#94a3b8" fontSize="10">
+              <text
+                x="10"
+                y={y + 4}
+                fill="#94a3b8"
+                fontSize="10"
+              >
                 {t.toFixed(2)}
               </text>
             </g>
@@ -406,21 +464,42 @@ function Sparkline(props: { values: number[] }) {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          points={points}
+          points={polylinePoints}
           strokeLinejoin="round"
           strokeLinecap="round"
         />
-        <circle cx={lastPoint[0]} cy={lastPoint[1]} r="3" fill="currentColor" />
+        {coords.map((point, idx) => (
+          <g key={`${point.label}-${idx}`}>
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r="5"
+              fill="#fbbf24"
+              opacity={idx === coords.length - 1 ? 1 : 0.4}
+            >
+              <title>{point.label}</title>
+            </circle>
+          </g>
+        ))}
+        {lastPoint && (
+          <circle
+            cx={lastPoint.x}
+            cy={lastPoint.y}
+            r="5"
+            class="text-amber-200"
+            fill="currentColor"
+          />
+        )}
       </svg>
       <p class="text-xs text-slate-400">
-        Recent {values.length} points
+        Recent {points.length} points
       </p>
     </div>
   );
 }
 
-function BarChart(props: { title: string; values: number[] }) {
-  const values = props.values;
+function BarChart(props: { title: string; data: ChartPoint[] }) {
+  const values = props.data.map((point) => point.value);
   if (values.length === 0) {
     return (
       <div>
@@ -441,21 +520,22 @@ function BarChart(props: { title: string; values: number[] }) {
           ))}
         </div>
         <div class="flex items-end gap-1 h-32 flex-1 border-l border-slate-800 pl-2">
-          {values.map((v, idx) => {
+          {props.data.map((point, idx) => {
+            const v = point.value;
             const h = Math.max(6, (v / max) * 100);
             return (
               <div
                 key={idx}
                 class="flex-1 bg-amber-400/70 rounded-t"
                 style={{ height: `${h}%` }}
-                title={`${v.toFixed(0)} ppm`}
+                title={point.label}
               />
             );
           })}
         </div>
       </div>
       <div class="flex justify-between text-[11px] text-slate-500 mt-1">
-        <span>Last {values.length} readings</span>
+        <span>Last {props.data.length} readings</span>
         <span>Peak {max.toFixed(0)} ppm</span>
       </div>
     </div>
@@ -465,23 +545,33 @@ function BarChart(props: { title: string; values: number[] }) {
 function Gauge(
   props: { title: string; value: number; unit: string; max: number },
 ) {
-  const pct = Math.min(1, props.value / props.max);
-  const angle = pct * 180 - 90;
+  const clamped = Math.max(0, Math.min(props.value, props.max));
+  const pct = clamped / props.max;
   const radius = 42;
   const cx = 50;
   const cy = 50;
-  const x = cx + radius * Math.cos(angle * Math.PI / 180);
-  const y = cy + radius * Math.sin(angle * Math.PI / 180);
+
+  const angleForFraction = (fraction: number) => Math.PI - (fraction * Math.PI);
+  const pointForFraction = (fraction: number, r: number) => {
+    const angle = angleForFraction(fraction);
+    return {
+      x: cx + r * Math.cos(angle),
+      y: cy - r * Math.sin(angle),
+    };
+  };
+
+  const targetPoint = pointForFraction(pct, radius);
   const largeArc = pct > 0.5 ? 1 : 0;
   const path = `M ${
     cx - radius
-  } ${cy} A ${radius} ${radius} 0 ${largeArc} 1 ${x} ${y}`;
+  } ${cy} A ${radius} ${radius} 0 ${largeArc} 1 ${targetPoint.x} ${targetPoint.y}`;
+  const tickFractions = [0, 0.25, 0.5, 0.75, 1];
   return (
     <div class="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
       <p class="text-sm text-slate-300 mb-2">{props.title}</p>
       <svg viewBox="0 0 100 60" class="w-full">
         <path
-          d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 1 1 ${
+          d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${
             cx + radius
           } ${cy}`}
           fill="none"
@@ -490,11 +580,38 @@ function Gauge(
         />
         <path d={path} fill="none" stroke="#fbbf24" strokeWidth="8" />
         <circle cx={cx} cy={cy} r="4" fill="#fbbf24" />
+        {tickFractions.map((fraction, idx) => {
+          const innerPoint = pointForFraction(fraction, radius - 8);
+          const outerPoint = pointForFraction(fraction, radius);
+          const label = Math.round(props.max * fraction).toString();
+          return (
+            <g key={fraction}>
+              <line
+                x1={innerPoint.x}
+                y1={innerPoint.y}
+                x2={outerPoint.x}
+                y2={outerPoint.y}
+                stroke="#64748b"
+                strokeWidth="1"
+              />
+              {(fraction === 0 || fraction === 0.5 || fraction === 1) && (
+                <text
+                  x={outerPoint.x - 6}
+                  y={outerPoint.y + 8}
+                  fill="#94a3b8"
+                  fontSize="8"
+                >
+                  {label}
+                </text>
+              )}
+            </g>
+          );
+        })}
       </svg>
-      <p class="text-xl font-semibold text-white">
-        {props.value.toFixed(2)}{" "}
-        <span class="text-slate-400 text-sm">{props.unit}</span>
-        <span class="text-slate-500 text-sm">/ {props.max.toFixed(0)}</span>
+      <p class="text-lg font-semibold text-white text-center -mt-4">
+        {clamped.toFixed(1)}{" "}
+        <span class="text-slate-400 text-xs">{props.unit}</span>
+        <span class="text-slate-500 text-xs">/ {props.max.toFixed(0)}</span>
       </p>
     </div>
   );

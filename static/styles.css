@@ -7,6 +7,7 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
       "Liberation Mono", "Courier New", monospace;
+    --color-amber-200: oklch(0.924 0.12 95.746);
     --color-amber-300: oklch(0.879 0.169 91.605);
     --color-amber-400: oklch(0.828 0.189 84.429);
     --color-amber-800: oklch(0.473 0.137 46.201);
@@ -206,6 +207,9 @@
   .mx-auto {
     margin-inline: auto;
   }
+  .-mt-4 {
+    margin-top: calc(var(--spacing) * -4);
+  }
   .mt-1 {
     margin-top: calc(var(--spacing) * 1);
   }
@@ -224,8 +228,14 @@
   .mb-2 {
     margin-bottom: calc(var(--spacing) * 2);
   }
+  .mb-3 {
+    margin-bottom: calc(var(--spacing) * 3);
+  }
   .ml-1 {
     margin-left: calc(var(--spacing) * 1);
+  }
+  .block {
+    display: block;
   }
   .flex {
     display: flex;
@@ -236,14 +246,14 @@
   .table {
     display: table;
   }
-  .h-20 {
-    height: calc(var(--spacing) * 20);
-  }
   .h-28 {
     height: calc(var(--spacing) * 28);
   }
   .h-32 {
     height: calc(var(--spacing) * 32);
+  }
+  .h-52 {
+    height: calc(var(--spacing) * 52);
   }
   .min-h-screen {
     min-height: 100vh;
@@ -253,9 +263,6 @@
   }
   .max-w-6xl {
     max-width: var(--container-6xl);
-  }
-  .max-w-screen-md {
-    max-width: var(--breakpoint-md);
   }
   .max-w-xl {
     max-width: var(--container-xl);
@@ -295,9 +302,6 @@
   }
   .justify-between {
     justify-content: space-between;
-  }
-  .justify-center {
-    justify-content: center;
   }
   .gap-1 {
     gap: calc(var(--spacing) * 1);
@@ -399,9 +403,6 @@
       background-color: color-mix(in oklab, var(--color-amber-400) 70%, transparent);
     }
   }
-  .bg-amber-800 {
-    background-color: var(--color-amber-800);
-  }
   .bg-slate-800 {
     background-color: var(--color-slate-800);
   }
@@ -458,9 +459,6 @@
   }
   .py-3 {
     padding-block: calc(var(--spacing) * 3);
-  }
-  .py-8 {
-    padding-block: calc(var(--spacing) * 8);
   }
   .py-10 {
     padding-block: calc(var(--spacing) * 10);
@@ -527,11 +525,11 @@
     --tw-tracking: 0.2em;
     letter-spacing: 0.2em;
   }
+  .text-amber-200 {
+    color: var(--color-amber-200);
+  }
   .text-amber-300 {
     color: var(--color-amber-300);
-  }
-  .text-emerald-300 {
-    color: var(--color-emerald-300);
   }
   .text-slate-100 {
     color: var(--color-slate-100);
