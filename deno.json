@@ -4,6 +4,9 @@
     "check": "deno fmt --check . && deno lint . && deno check",
     "dev": "deno run -A --watch=static/,routes/ dev.ts",
     "build": "deno run -A dev.ts build",
+    "dev:all": "powershell -NoLogo -Command \"Start-Job { deno run -A npm:@tailwindcss/cli@latest -i ./static/tailwind.css -o ./static/styles.css --watch }; try { deno run -A --watch=static/,routes/ dev.ts } finally { Get-Job | Where-Object { $_.Command -like '*tailwindcss*' } | Remove-Job -Force }\"",
+    "tw": "deno run -A npm:@tailwindcss/cli@latest -i ./static/tailwind.css -o ./static/styles.css --minify",
+    "tw:watch": "deno run -A npm:@tailwindcss/cli@latest -i ./static/tailwind.css -o ./static/styles.css --watch",
     "start": "deno serve -A _fresh/server.js",
     "update": "deno run -A -r jsr:@fresh/update ."
   },

@@ -1,0 +1,11 @@
+/* Tailwind v4 source file. Run `deno task tw` to regenerate `static/styles.css`. */
+@import "tailwindcss";
+
+@source "./routes/**/*.{ts,tsx}";
+@source "./components/**/*.{ts,tsx}";
+@source "./islands/**/*.{ts,tsx}";
+@source "./utils.ts";
+@source "./main.ts";
+
+@layer utilities {
+}

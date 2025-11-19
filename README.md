@@ -16,6 +16,17 @@ deno task dev
 
 This will watch the project directory and restart as necessary.
 
+### Tailwind CSS v4
+
+Source styles live in `static/tailwind.css` (it imports Tailwind and holds any custom utilities). Generate the served stylesheet at `static/styles.css` with:
+
+```
+deno task tw         # one-off build
+deno task tw:watch   # continuous rebuild alongside `deno task dev`
+```
+
+The global layout already links to `/styles.css`, so new classes are available after running one of the tasks above.
+
 
 ### Clone and deploy
 
