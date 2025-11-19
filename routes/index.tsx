@@ -25,7 +25,9 @@ const JWT =
 const ENDPOINT =
   "https://www.openindustrial.co/api/workspaces/explorer/warm-queries/warmquery-1763525176427";
 
-async function fetchBrewData(): Promise<{ latest: PrimaryResultRow | null; history: PrimaryResultRow[] }> {
+async function fetchBrewData(): Promise<
+  { latest: PrimaryResultRow | null; history: PrimaryResultRow[] }
+> {
   try {
     const response = await fetch(ENDPOINT, {
       headers: {
@@ -42,7 +44,9 @@ async function fetchBrewData(): Promise<{ latest: PrimaryResultRow | null; histo
     }
 
     const payload = await response.json() as WarmQueryResponse;
-    const primary = payload.primaryResults?.find((p) => p.name === "PrimaryResult");
+    const primary = payload.primaryResults?.find((p) =>
+      p.name === "PrimaryResult"
+    );
     const rows = (primary?.data ?? []).sort((a, b) =>
       new Date(b.EnqueuedTime).getTime() - new Date(a.EnqueuedTime).getTime()
     );
@@ -67,8 +71,8 @@ export default define.page(async function Home(ctx) {
         <div class="max-w-xl text-center space-y-3">
           <h1 class="text-3xl font-bold">No telemetry available</h1>
           <p class="text-slate-300">
-            We couldn&apos;t load brewery data right now. Please verify the warm query and credentials,
-            then refresh.
+            We couldn&apos;t load brewery data right now. Please verify the warm
+            query and credentials, then refresh.
           </p>
         </div>
       </div>
@@ -87,7 +91,9 @@ export default define.page(async function Home(ctx) {
             <p class="text-sm uppercase tracking-[0.2em] text-slate-400">
               Brewery Room Monitor
             </p>
-            <h1 class="text-4xl font-bold text-white">Fermentation Dashboard</h1>
+            <h1 class="text-4xl font-bold text-white">
+              Fermentation Dashboard
+            </h1>
             <p class="text-slate-300 mt-2">
               Live device telemetry every 30 seconds for{" "}
               <span class="font-semibold text-white">
@@ -166,26 +172,61 @@ export default define.page(async function Home(ctx) {
         <section class="rounded-xl border border-slate-800 bg-slate-800/70 p-5">
           <h2 class="text-xl font-semibold text-white">Notes</h2>
           <ul class="mt-3 space-y-2 text-slate-300 list-disc list-inside">
-            <li>Data refreshes automatically every 30 seconds at the source.</li>
-            <li>Temperature, pressure, and gravity are key for fermentation health.</li>
-            <li>Vent CO2 if ppm trends upward; watch flow rate during transfers.</li>
+            <li>
+              Data refreshes automatically every 30 seconds at the source.
+            </li>
+            <li>
+              Temperature, pressure, and gravity are key for fermentation
+              health.
+            </li>
+            <li>
+              Vent CO2 if ppm trends upward; watch flow rate during transfers.
+            </li>
           </ul>
         </section>
 
         <section class="grid gap-4 lg:grid-cols-2">
           <div class="rounded-xl border border-slate-800 bg-slate-800/70 p-5 space-y-4">
-            <h2 class="text-lg font-semibold text-white">Fermentation trends</h2>
+            <h2 class="text-lg font-semibold text-white">
+              Fermentation trends
+            </h2>
             <div class="grid gap-3 md:grid-cols-2">
-              <ChartCard title="Temperature (C)" values={history.map((r) => r.FermentationTemp)} maxPoints={24} />
-              <ChartCard title="Pressure (psi)" values={history.map((r) => r.FermentationPressure)} maxPoints={24} />
-              <ChartCard title="Specific Gravity" values={history.map((r) => r.SpecificGravity)} maxPoints={24} />
-              <ChartCard title="Flow (L/min)" values={history.map((r) => r.FlowRate)} maxPoints={24} />
+              <ChartCard
+                title="Temperature (C)"
+                values={history.map((r) => r.FermentationTemp)}
+                maxPoints={24}
+              />
+              <ChartCard
+                title="Pressure (psi)"
+                values={history.map((r) => r.FermentationPressure)}
+                maxPoints={24}
+              />
+              <ChartCard
+                title="Specific Gravity"
+                values={history.map((r) => r.SpecificGravity)}
+                maxPoints={24}
+              />
+              <ChartCard
+                title="Flow (L/min)"
+                values={history.map((r) => r.FlowRate)}
+                maxPoints={24}
+              />
             </div>
           </div>
           <div class="rounded-xl border border-slate-800 bg-slate-800/70 p-5 space-y-4">
-            <h2 class="text-lg font-semibold text-white">CO2 & Flow snapshot</h2>
-            <BarChart title="CO2 (ppm)" values={history.slice(0, 12).map((r) => r.CO2ppm)} />
-            <Gauge title="Flow Rate" value={brew.FlowRate} unit="L/min" max={Math.max(50, brew.FlowRate * 1.2)} />
+            <h2 class="text-lg font-semibold text-white">
+              CO2 & Flow snapshot
+            </h2>
+            <BarChart
+              title="CO2 (ppm)"
+              values={history.slice(0, 12).map((r) => r.CO2ppm)}
+            />
+            <Gauge
+              title="Flow Rate"
+              value={brew.FlowRate}
+              unit="L/min"
+              max={100}
+            />
           </div>
         </section>
 
@@ -216,7 +257,9 @@ export default define.page(async function Home(ctx) {
                       {new Date(row.EnqueuedTime).toLocaleString()}
                     </td>
                     <td class="py-2 pr-4">{fmt(row.FermentationTemp, 2)}</td>
-                    <td class="py-2 pr-4">{fmt(row.FermentationPressure, 2)}</td>
+                    <td class="py-2 pr-4">
+                      {fmt(row.FermentationPressure, 2)}
+                    </td>
                     <td class="py-2 pr-4">{fmt(row.SpecificGravity, 3)}</td>
                     <td class="py-2 pr-4">{row.CO2ppm}</td>
                     <td class="py-2 pr-4 font-semibold">
@@ -230,7 +273,8 @@ export default define.page(async function Home(ctx) {
             </table>
           </div>
           <p class="text-slate-400 text-xs mt-3">
-            Metrics now populate from the warm query result; the table above shows the ten most recent rows.
+            Metrics now populate from the warm query result; the table above
+            shows the ten most recent rows.
           </p>
         </section>
       </div>
@@ -284,7 +328,9 @@ function MiniCard(props: { title: string; value?: string; unit: string }) {
   );
 }
 
-function ChartCard(props: { title: string; values: number[]; maxPoints?: number }) {
+function ChartCard(
+  props: { title: string; values: number[]; maxPoints?: number },
+) {
   const series = props.values.slice(0, props.maxPoints ?? 20).reverse();
   return (
     <div class="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
@@ -317,15 +363,42 @@ function Sparkline(props: { values: number[] }) {
         <span>Min {min.toFixed(2)}</span>
         <span>Max {max.toFixed(2)}</span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} class="w-full h-28 text-amber-300">
-        <line x1="24" y1={height - 12} x2={width - 8} y2={height - 12} stroke="#334155" strokeWidth="1" />
-        <line x1="24" y1={height - 12} x2="24" y2="12" stroke="#334155" strokeWidth="1" />
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        class="w-full h-28 text-amber-300"
+      >
+        <line
+          x1="24"
+          y1={height - 12}
+          x2={width - 8}
+          y2={height - 12}
+          stroke="#334155"
+          strokeWidth="1"
+        />
+        <line
+          x1="24"
+          y1={height - 12}
+          x2="24"
+          y2="12"
+          stroke="#334155"
+          strokeWidth="1"
+        />
         {ticks.map((t, idx) => {
           const y = height - ((t - min) / span * (height - 30) + 18);
           return (
             <g key={idx}>
-              <line x1="20" y1={y} x2={width - 8} y2={y} stroke="#1f2937" strokeWidth="1" strokeDasharray="2 4" />
-              <text x="0" y={y + 4} fill="#94a3b8" fontSize="10">{t.toFixed(2)}</text>
+              <line
+                x1="20"
+                y1={y}
+                x2={width - 8}
+                y2={y}
+                stroke="#1f2937"
+                strokeWidth="1"
+                strokeDasharray="2 4"
+              />
+              <text x="0" y={y + 4} fill="#94a3b8" fontSize="10">
+                {t.toFixed(2)}
+              </text>
             </g>
           );
         })}
@@ -363,7 +436,9 @@ function BarChart(props: { title: string; values: number[] }) {
       <p class="text-sm text-slate-300 mb-1">{props.title}</p>
       <div class="flex">
         <div class="flex flex-col justify-between text-xs text-slate-500 pr-2 py-1">
-          {ticks.slice().reverse().map((t) => <span key={t}>{t.toFixed(0)}</span>)}
+          {ticks.slice().reverse().map((t) => (
+            <span key={t}>{t.toFixed(0)}</span>
+          ))}
         </div>
         <div class="flex items-end gap-1 h-32 flex-1 border-l border-slate-800 pl-2">
           {values.map((v, idx) => {
@@ -387,7 +462,9 @@ function BarChart(props: { title: string; values: number[] }) {
   );
 }
 
-function Gauge(props: { title: string; value: number; unit: string; max: number }) {
+function Gauge(
+  props: { title: string; value: number; unit: string; max: number },
+) {
   const pct = Math.min(1, props.value / props.max);
   const angle = pct * 180 - 90;
   const radius = 42;
@@ -396,17 +473,28 @@ function Gauge(props: { title: string; value: number; unit: string; max: number 
   const x = cx + radius * Math.cos(angle * Math.PI / 180);
   const y = cy + radius * Math.sin(angle * Math.PI / 180);
   const largeArc = pct > 0.5 ? 1 : 0;
-  const path = `M ${cx - radius} ${cy} A ${radius} ${radius} 0 ${largeArc} 1 ${x} ${y}`;
+  const path = `M ${
+    cx - radius
+  } ${cy} A ${radius} ${radius} 0 ${largeArc} 1 ${x} ${y}`;
   return (
     <div class="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
       <p class="text-sm text-slate-300 mb-2">{props.title}</p>
       <svg viewBox="0 0 100 60" class="w-full">
-        <path d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 1 1 ${cx + radius} ${cy}`} fill="none" stroke="#1f2937" strokeWidth="8" />
+        <path
+          d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 1 1 ${
+            cx + radius
+          } ${cy}`}
+          fill="none"
+          stroke="#1f2937"
+          strokeWidth="8"
+        />
         <path d={path} fill="none" stroke="#fbbf24" strokeWidth="8" />
         <circle cx={cx} cy={cy} r="4" fill="#fbbf24" />
       </svg>
       <p class="text-xl font-semibold text-white">
-        {props.value.toFixed(2)} <span class="text-slate-400 text-sm">{props.unit}</span>
+        {props.value.toFixed(2)}{" "}
+        <span class="text-slate-400 text-sm">{props.unit}</span>
+        <span class="text-slate-500 text-sm">/ {props.max.toFixed(0)}</span>
       </p>
     </div>
   );
